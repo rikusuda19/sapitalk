@@ -1,5 +1,6 @@
 ﻿using System;
 using spitalkDLL;
+using SpeechLib;
 
 namespace SampleCode
 {
@@ -23,7 +24,9 @@ namespace SampleCode
             sapi.Talk("これはテストの音声です");
 
             sapi.SetTalker(5);
-            sapi.Talk("これもテストの音声です");
+           
+
+            Console.ReadLine();
         }
     }
 }

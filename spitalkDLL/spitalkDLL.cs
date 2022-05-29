@@ -1,5 +1,6 @@
 ﻿using SpeechLib;
 using System;
+using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -9,6 +10,9 @@ namespace spitalkDLL
     public class SapiTalk
     {
         private SpVoice sapi = null;
+
+        private SpMemoryStream sapiMemoryStream = null;
+
         private Dictionary<int, SpObjectToken> SpeakerList = new Dictionary<int, SpObjectToken>();
         private Dictionary<int, SpObjectToken> OutputDeviceList = new Dictionary<int, SpObjectToken>();
 
@@ -17,11 +21,18 @@ namespace spitalkDLL
         private int AvatorIdx = 0;
         private int DevIdx = 0;
 
+        public SpMemoryStream SapiStream {
+            get { return sapiMemoryStream; }
+            set { sapiMemoryStream = value; }
+        }
+
         public SapiTalk()
         {
             try
             {
                 sapi = new SpVoice();
+                sapiMemoryStream = new SpMemoryStream();
+
                 SpObjectTokenCategory sapiCat = new SpObjectTokenCategory();
                 Dictionary<string, SpObjectToken> TokerPool = new Dictionary<string, SpObjectToken>();
 
@@ -122,16 +133,23 @@ namespace spitalkDLL
             Speed = speed;
         }
 
-        public void Talk(string text, bool asyncFlag = false)
+        public SpMemoryStream MakeStream(string text, bool asyncFlag = false)
         {
+            SpMemoryStream sms = new SpMemoryStream();
             try
             {
                 SpObjectToken backupSapi = null;
+               //if (sapiMemoryStream != null) {
+               //        sapiMemoryStream.SetData(null);
+               //}
+               sapi.AudioOutputStream = sms;
 
-                Thread t = new Thread(() =>
-                {
+                Thread t = new Thread(() => {
                     backupSapi = sapi.Voice;
-                    sapi.AudioOutput = OutputDeviceList[DevIdx];
+                
+
+                                       
+                    //sapi.AudioOutput = OutputDeviceList[DevIdx];
                     sapi.Voice = SpeakerList[AvatorIdx];
                     sapi.Rate = Speed;
                     sapi.Volume = Volume;
@@ -144,6 +162,30 @@ namespace spitalkDLL
             }
             catch (Exception e)
             {
+                throw new Exception(string.Format("発声処理で落ちたっす。{0}", e.Message));
+            }
+            return sms;
+        }
+
+
+        public void Talk(string text, bool asyncFlag = false) {
+            try {
+                SpObjectToken backupSapi = null;
+
+                Thread t = new Thread(() => {
+                    backupSapi = sapi.Voice;
+                    sapi.AudioOutput = OutputDeviceList[DevIdx];
+                    sapi.Voice = SpeakerList[AvatorIdx];
+                    sapi.Rate = Speed;
+                    sapi.Volume = Volume;
+                    sapi.Speak(text);
+                    sapi.Voice = backupSapi;
+                });
+                t.SetApartmentState(ApartmentState.STA);
+                t.Start();
+                if (!asyncFlag) t.Join();
+            }
+            catch (Exception e) {
                 throw new Exception(string.Format("発声処理で落ちたっす。{0}", e.Message));
             }
         }
