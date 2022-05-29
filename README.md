@@ -1,6 +1,6 @@
 # sapitalk
 
-k896951 氏 が公開している sapitalk のコードを公開。
+k896951 氏 が公開している sapitalk のコード。
 
 ## sapitalk
 k896951 氏 が[SAPIでテキストを読み上げるコマンド](https://hgotoh.jp/wiki/doku.php/documents/tools/tools-202)で公開しているツールのコード。
